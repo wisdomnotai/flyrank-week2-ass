@@ -1,13 +1,19 @@
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 app = FastAPI()
 
-
+#in-memory list
 tasks = [
     {"id":1, "title":"buy rice", "done":True},
     {"id":2, "title":"walk the dog", "done":True},
     {"id":3, "title":"attend sociology class","done":False}
     ]
+
+#input schema
+
+class CreateTask(BaseModel):
+    title:str
 
 #root api
 @app.get("/")
@@ -35,3 +41,12 @@ def get_task(task_id:int) -> dict:
         if task["id"] == task_id:
             return task 
     raise HTTPException(status_code=404, detail =  {"error": "Task not found"})
+
+#post a new task
+@app.post("/tasks", status_code = 202)
+def create_task(task: CreateTask):
+    if not task.title or not task.title.strip():
+        raise HTTPException(status_code=400, detail = "404 not found")
+    new_id = max((t["id"] for t in tasks), default=0) + 1
+    new_task = {"id":new_id, "title":task.title, "done":False}
+    return new_task
